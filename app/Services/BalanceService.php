@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\FineStatusEnum;
 use App\Models\Fine;
 use App\Models\Withdrawal;
 use Illuminate\Support\Facades\Cache;
@@ -16,7 +17,7 @@ class BalanceService
     public static function GetBalance()
     {
         return Cache::store('redis')->rememberForever('balance', function () {
-             $total = Fine::query()->sum('amount');
+             $total = Fine::query()->where('status', '=', FineStatusEnum::PAID)->sum('amount');
              $withdrawals = Withdrawal::query()->sum('amount');
 
              return $total - $withdrawals;
@@ -31,7 +32,7 @@ class BalanceService
     public static function GetGrandtotalBalance(): mixed
     {
         return Cache::store('redis')->rememberForever('grandtotalBalance', function () {
-            return Fine::query()->sum('amount');
+            return Fine::query()->where('status', '=',  FineStatusEnum::PAID)->sum('amount');
         });
     }
 

@@ -2,13 +2,13 @@ import Wrapper from '@components/common/Wrapper'
 import clsx from 'clsx'
 import React, { Dispatch, SetStateAction } from 'react'
 import { XCircleIcon, DotsCircleHorizontalIcon, CheckCircleIcon } from '@heroicons/react/outline'
-import Image from 'next/image'
 import Link from 'next/link'
 import { Fine } from 'types/Fine'
 import { status } from '@lib/fineStatus'
 import Button from './Button'
 import axios from '@lib/axios'
 import { User } from 'types/User'
+import { mutate } from 'swr'
 
 interface FineDrawerCompProps {
     fine: Fine
@@ -40,6 +40,7 @@ function FineDrawerComp({ fine, index, mutatePageItem, user, setIsOpen }: FineDr
             .patch(`${endpoint}/${fine.id}`)
             .then(() => {
                 fine.status = inputStatus
+                mutate('api/goal')
                 mutatePageItem(fine, index)
             })
             .catch((err) => console.log(err))
@@ -50,6 +51,7 @@ function FineDrawerComp({ fine, index, mutatePageItem, user, setIsOpen }: FineDr
             axios
                 .delete(`api/fine/delete/${fine.id}`)
                 .then(() => {
+                    mutate('api/goal')
                     mutatePageItem(null, index)
                     setIsOpen(false)
                 })
