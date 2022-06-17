@@ -2,14 +2,28 @@ import Wrapper from '@components/common/Wrapper'
 import { useAuth } from '@lib/hooks/useAuth'
 import { useGlobalContext } from 'context/GlobalContext'
 import { useRouter } from 'next/router'
-import React from 'react'
+import React, { useState } from 'react'
 import Button from './Button'
+import { Drawer } from './Drawer'
 import { Fine } from './Fine'
+import FineDrawerComp from './FineDrawerComp'
+import { Fine as FineType } from 'types/Fine'
+import { mutate } from 'swr'
 
 const LatestFines = () => {
     const { latestFines } = useGlobalContext()
     const router = useRouter()
     const { user } = useAuth()
+
+    const [isOpen, setIsOpen] = useState(false)
+    const [selectedFine, setSelectedFine] = useState<FineType | null>(null)
+    const [selectedFineIndex, setSelectedFineIndex] = useState(0)
+
+    const handleFineOnClick = (fine: FineType, index: number) => {
+        setSelectedFine(fine)
+        setSelectedFineIndex(index)
+        setIsOpen(true)
+    }
 
     if (latestFines.length < 1)
         return (
@@ -20,13 +34,28 @@ const LatestFines = () => {
         )
 
     return (
-        <Wrapper>
-            {latestFines.map((fine) => (
-                <Fine fine={fine} key={fine.id} />
-            ))}
+        <>
+            <Wrapper>
+                {latestFines.map((fine, index) => (
+                    <div key={fine.id} onClick={() => handleFineOnClick(fine, index)}>
+                        <Fine fine={fine} />
+                    </div>
+                ))}
 
-            <Button onClick={() => router.push(`/fine/${user.id}`)}>All my fines</Button>
-        </Wrapper>
+                <Button onClick={() => router.push(`/fine/${user.id}`)}>All my fines</Button>
+            </Wrapper>
+            <Drawer isOpen={isOpen} setIsOpen={setIsOpen}>
+                {selectedFine && (
+                    <FineDrawerComp
+                        fine={selectedFine}
+                        index={selectedFineIndex}
+                        mutatePageItem={() => mutate('/api/fine/latestFines')}
+                        user={user}
+                        setIsOpen={setIsOpen}
+                    />
+                )}
+            </Drawer>
+        </>
     )
 }
 
